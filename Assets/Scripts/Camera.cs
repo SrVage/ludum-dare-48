@@ -1,8 +1,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Numerics;
 using UnityEngine;
+using Quaternion = UnityEngine.Quaternion;
 using Random = UnityEngine.Random;
+using Vector3 = UnityEngine.Vector3;
 
 public class Camera : MonoBehaviour
 {
@@ -14,6 +17,8 @@ public class Camera : MonoBehaviour
     private float _intensity;
     private bool _shake;
     private bool _end=false;
+    private bool _dir;
+    private bool _isChange=false;
 
     void Start()
     {
@@ -23,14 +28,21 @@ public class Camera : MonoBehaviour
         _player.GetComponent<Player>().ChangeOxy += EndOfOxy;
         _player.GetComponent<Player>().Floor += ChangeOffset;
         _player.GetComponent<Player>().DeathFish += Death;
+        _player.GetComponent<Player>().PlayerPosition += ChangeWide;
+    }
+
+    private void ChangeWide(float pos)
+    {
+        GetComponent<UnityEngine.Camera>().fieldOfView = 60 + pos / 50;
     }
 
     private void ChangeOffset(bool dir)
     {
-        
-        if (dir)
+        _dir = dir;
+        _isChange = true;
+        Invoke(nameof(CancelChange), 2f);
+        /*if (dir)
         {
-            Debug.Log("cam");
             _offset = _startOffset + new Vector3(0, 10, 0);
             transform.rotation = Quaternion.Euler(Vector3.Lerp(transform.rotation.eulerAngles,new Vector3(20, 0, 0), Time.deltaTime));
         }
@@ -38,7 +50,12 @@ public class Camera : MonoBehaviour
         {
             _offset = _startOffset;
             transform.rotation = Quaternion.Euler(Vector3.Lerp(transform.rotation.eulerAngles,_rotation, Time.deltaTime));
-        }
+        }*/
+    }
+
+    private void CancelChange()
+    {
+        _isChange = false;
     }
 
     private void Death()
@@ -46,7 +63,7 @@ public class Camera : MonoBehaviour
         GetComponent<UnityEngine.Camera>().backgroundColor = new Color(0.377f, 0.031f, 0.031f, 1);
     }
     
-    private void EndOfOxy(float oxy)
+    private void EndOfOxy(float oxy, float charge)
     {
         if (oxy <= 0) _end = true;
         if (oxy < 20)
@@ -57,8 +74,21 @@ public class Camera : MonoBehaviour
         else _shake = false;
         
     }
-    
 
+    private void Update()
+    {
+        if (!_isChange) return;
+        if (_dir)
+        {
+            _offset = Vector3.Lerp(_offset, _startOffset + new Vector3(0, 10, 0), 3*Time.deltaTime);
+            transform.rotation = Quaternion.Euler(Vector3.Lerp(transform.rotation.eulerAngles,new Vector3(20, 0, 0), Time.deltaTime));
+        }
+        else
+        {
+            _offset = Vector3.Lerp(_offset,_startOffset, 3*Time.deltaTime);
+            transform.rotation = Quaternion.Euler(Vector3.Lerp(transform.rotation.eulerAngles,_rotation, Time.deltaTime));
+        }
+    }
 
     private void LateUpdate()
     {

@@ -3,27 +3,38 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.PlayerLoop;
+using Random = UnityEngine.Random;
 
 public class Player : MonoBehaviour
 {
-    public event Action<float> ChangeOxy;
+    public event Action<float, float> ChangeOxy;
     public event Action<GameObject> TakeOxy;
     public event Action<bool> Floor;
     public event Action DeathFish;
+    public event Action<float> PlayerPosition;
+    public event Action<GameObject> TakeInsruments;
 
-    private float _speed = 0.1f;
-    private float _oxygen = 30f;
-    private float _chargeLight = 100f;
     [SerializeField] private GameObject _ragdoll;
     [SerializeField] private float _currentSpeed;
     [SerializeField] private Animator _animator;
     [SerializeField] private List<Rigidbody> _partsOfBody = new List<Rigidbody>();
     [SerializeField] private Transform _raycast;
     [SerializeField] private ParticleSystem _buble;
+    [SerializeField] private Light _light;
+    [SerializeField] private AudioClip[] _clip;
+    [SerializeField] private Transform _ps;
+        
+    private float _speed = 0.1f;
+    private float _oxygen = 100f;
+    private float _chargeLight = 100f;
+    private float _startCharge = 2f;
     private Rigidbody _rb;
+    private AudioSource _audio;
+    private ParticleSystem _objP;
     
     void Start()
     {
+        _audio = GetComponent<AudioSource>();
         ChangeOxy += Death;
         _rb = GetComponent<Rigidbody>();
         _partsOfBody.AddRange((_ragdoll.GetComponentsInChildren<Rigidbody>()));
@@ -33,9 +44,28 @@ public class Player : MonoBehaviour
 
     private void Buble()
     {
-        _buble.Play();
+        if (_oxygen <= 0) return;
+       _objP = Instantiate(_buble, _ps.position, Quaternion.identity);
+       Destroy(_objP, 2f);
+        StartCoroutine(nameof(BubbleSound));
         _oxygen -= 4f;
-        ChangeOxy?.Invoke(_oxygen);
+        _chargeLight -= 1;
+        _light.intensity = _startCharge*_chargeLight/100;
+        ChangeOxy?.Invoke(_oxygen, _chargeLight);
+        PlayerPosition?.Invoke(transform.position.y);
+    }
+    
+    IEnumerator BubbleSound()
+    {
+        yield return new WaitForSeconds(0.3f);
+        
+        for (int i = 0; i < Random.Range(2, 6); i++)
+        {
+            _audio.PlayOneShot(_clip[0]);
+            yield return new WaitForSeconds(Random.Range(0.2f, 0.3f));
+            if (i==1) _objP.transform.position = _ps.position;
+        }
+
     }
 
     private void KinematicOn()
@@ -46,10 +76,11 @@ public class Player : MonoBehaviour
         }
     }
 
-    private void Death(float ox)
+    private void Death(float ox, float charge)
     {
         if (ox <= 0)
         {
+            _audio.PlayOneShot(_clip[1]);
             _animator.enabled = false;
             _ragdoll.GetComponent<CapsuleCollider>().enabled = false;
             for (int i=0; i<_partsOfBody.Count; i++)
@@ -102,11 +133,12 @@ public class Player : MonoBehaviour
             if (_oxygen >= (_currentSpeed - 5)) _oxygen -= (_currentSpeed - 5);
             else _oxygen = 0;
         }
-        ChangeOxy?.Invoke(_oxygen);
+        ChangeOxy?.Invoke(_oxygen, _chargeLight);
         if (other.collider.gameObject.CompareTag("Enemy"))
         {
             _oxygen = 0;
-            Death(0);
+            ChangeOxy?.Invoke(_oxygen, _chargeLight);
+            //Death(_oxygen, 0);
         }
     }
 
@@ -114,8 +146,16 @@ public class Player : MonoBehaviour
     {
         if (other.CompareTag("Oxygen"))
         {
+            _audio.PlayOneShot(_clip[2]);
             _oxygen += 30;
+            if (_oxygen > 100) _oxygen = 100;
             TakeOxy?.Invoke(other.gameObject);
+            ChangeOxy?.Invoke(_oxygen, _chargeLight);
+        }
+        if (other.CompareTag("Instruments"))
+        {
+            _audio.PlayOneShot(_clip[2]);
+            TakeInsruments?.Invoke(other.gameObject);
         }
     }
 
