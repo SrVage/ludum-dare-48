@@ -56,7 +56,7 @@ public class UI : MonoBehaviour
     public void Restart()
     {
         Time.timeScale = 1;
-        SceneManager.LoadScene(0);
+        SceneManager.LoadScene(1);
     }
 
     private void LooseLevel()
@@ -74,5 +74,10 @@ public class UI : MonoBehaviour
         _menu.SetActive(true);
         _status.text = "Win";
         Time.timeScale = 0;
+    }
+
+    public void ExitGame()
+    {
+        Application.Quit();
     }
 }

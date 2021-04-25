@@ -31,7 +31,7 @@ public class Level : MonoBehaviour
     private void CreateFish()
     {
        var obj3 = Instantiate(_fish, new Vector3(transform.position.x + 180, transform.position.y + Random.Range(-30, 30), 0), Quaternion.Euler(new Vector3(0,-90,0)));
-        Destroy(obj3, 60);
+        Destroy(obj3, 80);
     }
 
     private void CreateBallons()
@@ -69,6 +69,13 @@ public class Level : MonoBehaviour
         cube.transform.position = floor.transform.position-new Vector3(0,10,0);
         cube.transform.localScale = new Vector3(100, 2, 100);
         Instantiate(_instruments, new Vector3(Random.Range(transform.position.x-180, transform.position.x+180), transform.position.y-10f, 0), Quaternion.Euler(new Vector3(-90,0,0)));
+    }
+    
+    public void CreateFirstStone()
+    {
+        var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        cube.transform.position = ceiling.transform.position-new Vector3(0,9,0);
+        cube.transform.localScale = new Vector3(100, 2, 100);
     }
 
     private void CreateInstruments()

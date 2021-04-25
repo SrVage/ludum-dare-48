@@ -19,9 +19,17 @@ public class GM : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        Application.targetFrameRate = 60;
         StartCoroutine(nameof(BuildLevel));
         _player.GetComponent<Player>().TakeInsruments += InstrumentTake;
         Invoke(nameof(FindInstruments), 1f);
+        Physics.gravity = new Vector3(0, -70f, 0);
+        Invoke(nameof(CancelGravity), 2f);
+    }
+
+    private void CancelGravity()
+    {
+        Physics.gravity = new Vector3(0, -0.81f, 0); 
     }
 
     private void FindInstruments()
@@ -52,7 +60,7 @@ public class GM : MonoBehaviour
                           _levels[j - 1].GetComponent<Level>().floor.transform.position;
                 _levels[j].transform.position -= (_offset + new Vector3(0, -1, 0));
             }
-
+            if (j==0) _levels[j].GetComponent<Level>().CreateFirstStone();
             if (j == k-1)
                 _levels[j].GetComponent<Level>().CreateFinishStone();
         }

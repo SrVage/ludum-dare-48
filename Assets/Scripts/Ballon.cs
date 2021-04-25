@@ -10,6 +10,13 @@ public class Ballon : MonoBehaviour, IDisposable
     {
         _player = GameObject.FindObjectOfType<Player>().GetComponent<Player>();
         _player.TakeOxy += PlayerTakeOxy;
+        GetComponent<Rigidbody>().useGravity = false;
+        Invoke(nameof(Gravity), 1.5f);
+    }
+
+    private void Gravity()
+    {
+        GetComponent<Rigidbody>().useGravity = true;
     }
 
     private void PlayerTakeOxy(GameObject gameObject)

@@ -23,8 +23,10 @@ public class Player : MonoBehaviour
     [SerializeField] private Light _light;
     [SerializeField] private AudioClip[] _clip;
     [SerializeField] private Transform _ps;
+    [SerializeField] private ParticleSystem _blood;
         
     private float _speed = 0.1f;
+    private float _maxSpeed = 6;
     private float _oxygen = 100f;
     private float _chargeLight = 100f;
     private float _startCharge = 2f;
@@ -40,6 +42,13 @@ public class Player : MonoBehaviour
         _partsOfBody.AddRange((_ragdoll.GetComponentsInChildren<Rigidbody>()));
         KinematicOn();
         InvokeRepeating(nameof(Buble), 1f, 7f);
+        _rb.useGravity = false;
+        Invoke(nameof(Gravity), 2f);
+    }
+
+    private void Gravity()
+    {
+        _rb.useGravity = true;
     }
 
     private void Buble()
@@ -121,16 +130,17 @@ public class Player : MonoBehaviour
     void FixedUpdate()
     {
         if (_oxygen<=0) return;
-        if (_currentSpeed > 10) _rb.velocity = _rb.velocity.normalized * 10;
+        if (_currentSpeed > _maxSpeed) _rb.velocity = _rb.velocity.normalized * _maxSpeed;
         _rb.AddForce(0, Input.GetAxis("Vertical")*_speed, 0, ForceMode.VelocityChange);
         _rb.AddForce(Input.GetAxis("Horizontal")*_speed, 0, 0, ForceMode.VelocityChange);
     }
 
     private void OnCollisionEnter(Collision other)
     {
-        if (_currentSpeed > 5)
+        if (_currentSpeed > 4)
         {
-            if (_oxygen >= (_currentSpeed - 5)) _oxygen -= (_currentSpeed - 5);
+            _audio.PlayOneShot(_clip[3]);
+            if (_oxygen >= (_currentSpeed - 4)) _oxygen -= (_currentSpeed - 4);
             else _oxygen = 0;
         }
         ChangeOxy?.Invoke(_oxygen, _chargeLight);
@@ -138,7 +148,7 @@ public class Player : MonoBehaviour
         {
             _oxygen = 0;
             ChangeOxy?.Invoke(_oxygen, _chargeLight);
-            //Death(_oxygen, 0);
+            Instantiate(_blood, transform.position, Quaternion.identity);
         }
     }
 

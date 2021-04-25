@@ -10,6 +10,7 @@ using Vector3 = UnityEngine.Vector3;
 public class Camera : MonoBehaviour
 {
     [SerializeField] private GameObject _player;
+    [SerializeField] private Light _sun;
 
     private Vector3 _offset;
     private Vector3 _startOffset;
@@ -34,6 +35,7 @@ public class Camera : MonoBehaviour
     private void ChangeWide(float pos)
     {
         GetComponent<UnityEngine.Camera>().fieldOfView = 60 + pos / 50;
+        _sun.intensity = 0.3f - pos / 500;
     }
 
     private void ChangeOffset(bool dir)
